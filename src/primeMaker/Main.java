@@ -1,81 +1,47 @@
 package primeMaker;
 
-import java.math.BigInteger;
-import java.util.Random;
-
+import java.util.List;
+import java.util.ArrayList;
 import com.aparapi.Kernel;
-import com.aparapi.Range;
 
 public class Main {
-	
+
 	static Kernel GPUKernel;
-	
-	public Main() {
-		
-	}
-	
-	
+
 	public static void main(String[] args) {
-		
+		List<Integer> computeList = new ArrayList<Integer>();
+
 		GPUKernel = new Kernel() {
 			@Override
 			public void run() {
-	
+				int max = getGlobalId();
+
+				for (int i = 1; i < max; i++) {
+					boolean isPrimeNumber = true;
+
+					// check to see if the number is prime
+					for (int j = 2; j < i; j++) {
+						if (i % j == 0) {
+							isPrimeNumber = false;
+							break; // exit the inner for loop
+						}
+					}
+
+					// print the number if prime
+					if (isPrimeNumber) {
+						// check to see that the prime has as many digits as max.
+						if (Integer.toString(i).length() > Integer.toString(max).length()) {
+							System.out.print(i + "\n ");
+						}
+					}
+				}
+
 			}
-	
-		    /** Function to check if prime or not **/
-		    public boolean isPrime(long n, int iteration)
-		    {
-		        /** base case **/
-		        if (n == 0 || n == 1)
-		            return false;
-		        /** base case - 2 is prime **/
-		        if (n == 2)
-		            return true;
-		        /** an even number other than 2 is composite **/
-		        if (n % 2 == 0)
-		            return false;
-		 
-		        long s = n - 1;
-		        while (s % 2 == 0)
-		            s /= 2;
-		 
-		        Random rand = new Random();
-		        for (int i = 0; i < iteration; i++)
-		        {
-		            long r = Math.abs(rand.nextLong());            
-		            long a = r % (n - 1) + 1, temp = s;
-		            long mod = modPow(a, temp, n);
-		            while (temp != n - 1 && mod != 1 && mod != n - 1)
-		            {
-		                mod = mulMod(mod, mod, n);
-		                temp *= 2;
-		            }
-		            if (mod != n - 1 && temp % 2 == 0)
-		                return false;
-		        }
-		        return true;        
-		    }
-		    /** Function to calculate (a ^ b) % c **/
-		    public long modPow(long a, long b, long c)
-		    {
-		        long res = 1;
-		        for (int i = 0; i < b; i++)
-		        {
-		            res *= a;
-		            res %= c; 
-		        }
-		        return res % c;
-		    }
-		    /** Function to calculate (a * b) % c **/
-		    public long mulMod(long a, long b, long mod) 
-		    {
-		        return BigInteger.valueOf(a).multiply(BigInteger.valueOf(b)).mod(BigInteger.valueOf(mod)).longValue();
-		    }
-			
 		};
-		
-		
-		GPUKernel.execute(Range.create(1));
+
+		GPUKernel.execute(10000);
+		GPUKernel.dispose();
+
 	}
+
 }
