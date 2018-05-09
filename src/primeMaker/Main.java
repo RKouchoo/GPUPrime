@@ -1,15 +1,17 @@
 package primeMaker;
 
-import java.util.List;
-import java.util.ArrayList;
+import java.math.BigInteger;
+
 import com.aparapi.Kernel;
+import com.aparapi.device.Device;
 
 public class Main {
 
 	static Kernel GPUKernel;
+	static BigInteger ix;
 
+	@SuppressWarnings("deprecation")
 	public static void main(String[] args) {
-		List<Integer> computeList = new ArrayList<Integer>();
 
 		GPUKernel = new Kernel() {
 			@Override
@@ -30,16 +32,25 @@ public class Main {
 					// print the number if prime
 					if (isPrimeNumber) {
 						// check to see that the prime has as many digits as max.
-						if (Integer.toString(i).length() > Integer.toString(max).length()) {
-							System.out.print(i + "\n ");
+						if (Integer.toString(i).length() >= Integer.toString(max).length()) {
+							System.out.println(i);
 						}
 					}
 				}
-
+				
+				
 			}
 		};
 
-		GPUKernel.execute(10000);
+		GPUKernel.addExecutionModes(Kernel.EXECUTION_MODE.GPU); // why is this deprecitated?
+	
+		try {
+			double x = GPUKernel.execute(10000).getAccumulatedExecutionTimeAllThreads(Device.best());
+			System.out.println("Elapsed time (Seconds): " + x / 1000);
+		} catch (IllegalStateException t) {
+			System.out.println("Switching to CPU Mode!"); // unfortunately this try catch does not catch that error.
+		}
+		
 		GPUKernel.dispose();
 
 	}
